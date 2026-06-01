@@ -20,6 +20,14 @@ where
 * $D_{photons}$ is the total number of photon interactions
 * $\eta_{photons}$ si the quantum efficiency of the array (?)
 
-1. Critique this model
-2. Determine the marginal distributions of $D_{neutron}, N_{photon}$ and $D_{photon}$. Futhermore, find their expected value and variance
-3. Determine the SNR of $D_{neutron}$ and $D_{photon}$
+Then
+$$D_n\sim Poisson(\lambda_n\eta_n)$$
+$$E(D_n) = Var(D_n) = \lambda_n\eta_n$$
+$$N_p\sim NA $$
+$$E(N_p) = \lambda_n\lambda_0\eta_n$$
+$$Var(N_p) = \lambda_n\lambda_0\eta_n(1+\lambda_0)$$
+$$E(D_p) =   \lambda_n\lambda_0\eta_n\eta_p$$
+$$Var(D_p) =  \lambda_n\lambda_0\eta_n(1+\lambda_0\eta_p)$$
+
+$$SNR(D_n) = (\lambda_n\eta_n)^{1/2}$$
+$$SNR(D_p) = \left(\frac{\lambda_n\lambda_0\eta_n\eta_p}{1+\lambda_0\eta_p}\right)^{1/2}$$

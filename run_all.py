@@ -77,15 +77,11 @@ def main():
         print(f"  {len(pixel_df)} pixels, {len(tdc_df)} TDC edges (from files)")
 
     else:
-        # --- Synthetic data generator (Stage E) ---
+        # --- Synthetic data generator (Stage E) — returns dataframes directly ---
         from tpx3pipe.synth import generate
         pixel_df, tdc_df, truth_df = _step("Stage E (synth)", generate, cfg)
-        data_dir = Path("data")
-        data_dir.mkdir(exist_ok=True)
-        pixel_df.to_parquet(data_dir / "pixels.parquet", index=False)
-        tdc_df.to_parquet(data_dir / "tdc.parquet", index=False)
-        truth_df.to_parquet(data_dir / "truth.parquet", index=False)
-        print(f"  {len(pixel_df)} pixels, {len(tdc_df)} TDC edges, {len(truth_df)} truth clusters (synth)")
+        print(f"  {len(pixel_df):,} pixels, {len(tdc_df):,} TDC edges, "
+              f"{len(truth_df):,} truth clusters (synth)")
 
         if args.synth_only:
             return

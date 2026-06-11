@@ -44,7 +44,14 @@ def _make_tdc(cfg: dict, rng: np.random.Generator) -> pd.DataFrame:
         keep = rng.random(len(times)) >= missed_rate
         times = times[keep]
 
-    tdc_df = pd.DataFrame({"time_ns": times})
+    n = len(times)
+    tdc_df = pd.DataFrame({
+        "tdc_type":   np.zeros(n, dtype=np.int32),
+        "timestamp":  np.zeros(n, dtype=np.int64),
+        "fine_stamp": np.zeros(n, dtype=np.int32),
+        "counter":    np.arange(n, dtype=np.int64),
+        "time_ns":    times,
+    })
     return tdc_df
 
 
@@ -134,13 +141,13 @@ def _make_cluster_pixels(
 
     df = pd.DataFrame(
         {
-            "x_pix": xs,
-            "y_pix": ys,
-            "toa": np.zeros(n_pix, dtype=np.int64),    # opaque — not used
-            "ftoa": np.zeros(n_pix, dtype=np.int64),
+            "x_pix":      xs,
+            "y_pix":      ys,
+            "toa":        np.zeros(n_pix, dtype=np.int64),   # opaque — not used
+            "ftoa":       np.zeros(n_pix, dtype=np.int64),
             "spidr_time": np.zeros(n_pix, dtype=np.int64),
-            "time_ns": pixel_times,
-            "tot": tots,
+            "time_ns":    pixel_times,
+            "tot":        tots,   # required by features/CNN; present in real Timepix3 data
         }
     )
     return df
@@ -265,22 +272,18 @@ def generate(cfg: dict, seed: int | None = None) -> Tuple[pd.DataFrame, pd.DataF
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Generate synthetic Timepix3 data")
     parser.add_argument("--config", default="config.yaml")
-    parser.add_argument("--out-dir", default="data")
     parser.add_argument("--seed", type=int, default=None)
     args = parser.parse_args(argv)
 
     from tpx3pipe.io import load_config
     cfg = load_config(args.config)
 
-    out = Path(args.out_dir)
-    out.mkdir(parents=True, exist_ok=True)
-
     pixel_df, tdc_df, truth_df = generate(cfg, seed=args.seed)
 
-    pixel_df.to_parquet(out / "pixels.parquet", index=False)
-    tdc_df.to_parquet(out / "tdc.parquet", index=False)
-    truth_df.to_parquet(out / "truth.parquet", index=False)
-    print(f"Wrote {len(pixel_df)} pixels, {len(tdc_df)} TDC edges, {len(truth_df)} clusters → {out}/")
+    print(f"pixel_df  : {len(pixel_df):,} rows  columns={list(pixel_df.columns)}")
+    print(f"tdc_df    : {len(tdc_df):,} rows  columns={list(tdc_df.columns)}")
+    print(f"truth_df  : {len(truth_df):,} clusters")
+    return pixel_df, tdc_df, truth_df
 
 
 if __name__ == "__main__":

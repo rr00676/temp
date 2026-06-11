@@ -1,0 +1,116 @@
+# Timepix3 ToF Cluster Classification Pipeline — master config
+
+# ----- Paths ----------------------------------------------------------------
+paths:
+  pixel_data: "data/pixels.parquet"   # used when tpx3_file is null
+  tdc_data: "data/tdc.parquet"        # used when tpx3_file is null
+  artifacts: "artifacts"
+  plots: "plots"
+
+# ----- Real TPX3 file (leave null to use synth/parquet data) ----------------
+tpx3:
+  file: null                          # set to path of your .tpx3 file to use real data
+  module_path: null                   # directory containing readtpx3.py (null = already on path)
+  # Rename columns if readtpx3 returns different names than the pipeline expects.
+  # Only list columns that need renaming; omit the rest.
+  # Example: column_map: {Time: time_ns, ToT: tot}
+  column_map: {}
+
+# ----- Reproducibility ------------------------------------------------------
+seed: 42
+
+# ----- TDC diagnostics (Stage A) --------------------------------------------
+tdc:
+  period_override_ns: null          # null → measure from data
+  missed_edge_threshold: 1.5        # gap > threshold × period → missed edge
+
+# ----- Clustering (Stage B) -------------------------------------------------
+clustering:
+  dt_ns: 2000                       # temporal join window (ns)
+  max_gap: 0                        # Chebyshev gap tolerance (0 = strict 8-conn)
+  time_criterion: "chain"           # "chain" | "min" — temporal join basis
+  safety_margin_ns: 200             # extra ns before closing open clusters
+
+# ----- Cluster features (Stage C) ------------------------------------------
+# no tunable params; derived from clustering output
+
+# ----- ToF / folding (Stage D) ----------------------------------------------
+tof:
+  cluster_time_mode: "t_min"        # "t_min" | "t_argmax_tot"
+
+# ----- Labeling / mixture fit (Stage F) -------------------------------------
+labeling:
+  n_peaks: 2                        # Gaussian peaks in addition to uniform background
+  peak_means_init_ns: [175.0, 250.0]
+  peak_stds_init_ns: [20.0, 20.0]
+  n_em_iter: 200
+  confidence_threshold: 0.90        # below → "ambiguous"
+
+# ----- GBT baseline (Stage H) -----------------------------------------------
+baseline:
+  train_frac: 0.70
+  val_frac: 0.15
+  # test_frac is 1 - train - val = 0.15
+  lgbm_params:
+    n_estimators: 500
+    learning_rate: 0.05
+    num_leaves: 63
+    class_weight: "balanced"
+    random_state: 42
+
+# ----- CNN (Stage I) --------------------------------------------------------
+cnn:
+  patch_size: 32
+  batch_size: 64
+  max_epochs: 50
+  early_stopping_patience: 7
+  learning_rate: 1.0e-3
+  use_soft_labels: true
+  augmentation: true
+  temperature_scaling: true
+
+# ----- Synthetic data generator (Stage E / synth.py) -----------------------
+synth:
+  period_ns: 1785.0
+  period_jitter_ns: 0.5
+  duration_s: 0.1                   # 100 ms → ~56k pulses, ~6700 clusters, ~33k pixels
+  missed_edge_rate: 0.02            # fraction of TDC pulses missing
+
+  species:
+    - name: "gamma"
+      rate_per_pulse: 0.08          # ~0.08 * 56000 pulses ≈ 4500 clusters (5 s → reduce for test)
+      tof_mean_ns: 175.0
+      tof_std_ns: 15.0
+      archetype: "dot"
+
+    - name: "neutron_fast"
+      rate_per_pulse: 0.03
+      tof_mean_ns: 250.0
+      tof_std_ns: 25.0
+      archetype: "blob"
+
+    - name: "slow_background"
+      rate_per_pulse: 0.01
+      tof_mean_ns: 2100.0           # > period → generates wraparound contamination
+      tof_std_ns: 200.0
+      archetype: "curl"
+
+  # per-archetype pixel geometry
+  archetypes:
+    dot:
+      n_pixels_range: [1, 4]
+      tot_mean: 80
+      tot_std: 20
+    curl:
+      n_pixels_range: [5, 25]
+      tot_mean: 150
+      tot_std: 40
+    blob:
+      n_pixels_range: [4, 20]
+      tot_mean: 600
+      tot_std: 150
+
+  intra_cluster_spread_ns: 50.0     # pixel time jitter within cluster
+  time_walk_delay_ns: 80.0          # extra delay on low-ToT pixels
+  time_walk_threshold_tot: 100      # pixels below this get time-walk delay
+  shuffle_horizon_ns: 200000.0      # unsorted-arrival horizon (200 µs)

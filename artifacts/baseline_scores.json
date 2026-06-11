@@ -1,0 +1,48 @@
+{
+  "model": "LightGBM",
+  "n_train": 2020,
+  "n_val": 433,
+  "n_test": 433,
+  "features": [
+    "n_pixels",
+    "tot_sum",
+    "tot_max",
+    "tot_mean",
+    "cx_w",
+    "cy_w",
+    "bbox_w",
+    "bbox_h",
+    "eccentricity",
+    "linearity",
+    "compactness",
+    "dt_min_vs_argmax"
+  ],
+  "classification_report": {
+    "1": {
+      "precision": 0.9897959183673469,
+      "recall": 0.9603960396039604,
+      "f1-score": 0.9748743718592965,
+      "support": 404.0
+    },
+    "2": {
+      "precision": 0.6097560975609756,
+      "recall": 0.8620689655172413,
+      "f1-score": 0.7142857142857143,
+      "support": 29.0
+    },
+    "accuracy": 0.953810623556582,
+    "macro avg": {
+      "precision": 0.7997760079641613,
+      "recall": 0.9112325025606008,
+      "f1-score": 0.8445800430725054,
+      "support": 433.0
+    },
+    "weighted avg": {
+      "precision": 0.9643429049646107,
+      "recall": 0.953810623556582,
+      "f1-score": 0.9574215518370474,
+      "support": 433.0
+    }
+  },
+  "test_accuracy": 0.953810623556582
+}

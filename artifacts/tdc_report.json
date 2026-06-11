@@ -1,0 +1,11 @@
+{
+  "measured_period_ns": 1785.0092206299305,
+  "period_spread_ns": 256.4711139217597,
+  "n_edges": 54916,
+  "n_gaps_with_missed_edges": 1085,
+  "n_missing_edges_estimated": 1108,
+  "frac_periods_affected": 0.019777,
+  "total_span_ns": 100001024.96408735,
+  "expected_span_ns": 98023781.35089263,
+  "span_discrepancy_ns": 1977243.613194719
+}
